@@ -43,14 +43,25 @@ class Paciente {
     public string $nomePaciente;
     public string $cpfPaciente;
 
+    
     public function __construct(string $nomePaciente, string $cpfPaciente) {
+        header('Content-Type: application/json; charset=utf-8');
+        if (trim($nomePaciente ?? '') === '' || trim($cpfPaciente ?? '') === '') {
+            
+            http_response_code(400);
+
+            die(json_encode([
+                'mensagem' => 'Dados inválidos.'
+                ]));
+        }
+
         $this->nomePaciente = $nomePaciente;
         $this->cpfPaciente = $cpfPaciente;
     }
     public function gerarFichaResumo():string {
         $fichaPaciente = $this->nomePaciente;
         $documento = $this->cpfPaciente;
-        return "Paciente: " . $fichaPaciente . "<br>" . "Documento: " . $documento;
+        return "Paciente: {$fichaPaciente} \nDocumento:{$documento}";
     }
 }
 
