@@ -41,10 +41,23 @@ class PacienteRepository {
     }
 
     public function buscarPorCpf(string $cpf): ?array {
-        $sql= "SELECT * FROM pacientes WHERE cpf = :cpf";
+        $sql= "SELECT nome FROM pacientes WHERE cpf = :cpf";
         $stmt = $this->conexao->prepare($sql);
 
         $stmt->bindValue(":cpf", $cpf);
+
+        $stmt->execute();
+
+        $resultado = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        return ($resultado === false)? null : $resultado;
+    }
+
+    public function buscarContato(int $id): ?array {
+        $sql= "SELECT nome, cpf FROM pacientes WHERE id = :id";
+        $stmt= $this->conexao->prepare($sql);
+
+        $stmt->bindValue(':id', $id);
 
         $stmt->execute();
 
@@ -58,16 +71,26 @@ class PacienteRepository {
 //Testes
 // Mock do banco em memória com um paciente já inserido
 $banco = new PDO('sqlite::memory:');
-$banco->exec("CREATE TABLE pacientes (nome TEXT, cpf TEXT)");
-$banco->exec("INSERT INTO pacientes VALUES ('Carlos Silva', '123.456.789-00')");
+$banco->exec("CREATE TABLE pacientes (id INT, nome TEXT, cpf TEXT)");
+$banco->exec("INSERT INTO pacientes VALUES (456, 'Carlos Silva', '123.456.789-00')");
 
 $repo = new PacienteRepository($banco);
 
 // Teste 1: Buscar CPF que existe
 $paciente = $repo->buscarPorCpf('123.456.789-00');
-echo $paciente ? "Encontrado: " . $paciente['nome'] : "Não encontrado";
-echo "<br>";
+echo $paciente ? 'Encontrado: ' . $paciente['nome'] : 'Não encontrado';
+echo '<br>';
 
 // Teste 2: Buscar CPF que NÃO existe
 $fantasma = $repo->buscarPorCpf('000.000.000-00');
-echo $fantasma ? "Encontrado: " . $fantasma['nome'] : "Não encontrado";
+echo $fantasma ? 'Encontrado: ' . $fantasma['nome'] : 'Não encontrado';
+echo '<br>';
+
+// Teste 3: Buscar ID que existe
+$paciente = $repo->buscarContato(456);
+echo $paciente ? 'Encontrado: ' . $paciente['nome'] . " | " . $paciente['cpf'] : 'Não encontrado';
+echo '<br>';
+
+// Teste 4: Buscar ID que NÃO existe
+$fantasma = $repo->buscarContato(000);
+echo $fantasma ? 'Encontrado: ' . $fantasma['nome'] : 'Não encontrado';
