@@ -39,21 +39,35 @@ class PacienteRepository {
 
         return true;
     }
-}
 
+    public function buscarPorCpf(string $cpf): ?array {
+        $sql= "SELECT * FROM pacientes WHERE cpf = :cpf";
+        $stmt = $this->conexao->prepare($sql);
+
+        $stmt->bindValue(":cpf", $cpf);
+
+        $stmt->execute();
+
+        $resultado = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        return ($resultado === false)? null : $resultado;
+    }
+}
 
 
 //Testes
-// 1. O Mock (Simulação) de um banco de dados na memória RAM
-$bancoEmMemoria = new PDO('sqlite::memory:');
-$bancoEmMemoria->exec("CREATE TABLE pacientes (nome TEXT, cpf TEXT)");
+// Mock do banco em memória com um paciente já inserido
+$banco = new PDO('sqlite::memory:');
+$banco->exec("CREATE TABLE pacientes (nome TEXT, cpf TEXT)");
+$banco->exec("INSERT INTO pacientes VALUES ('Carlos Silva', '123.456.789-00')");
 
-// 2. Instanciando o seu Repositório e injetando a conexão falsa nele
-$repositorio = new PacienteRepository($bancoEmMemoria);
+$repo = new PacienteRepository($banco);
 
-// 3. Testando o método blindado
-$sucesso = $repositorio->salvarPaciente("João da Silva", "123.456.789-00");
+// Teste 1: Buscar CPF que existe
+$paciente = $repo->buscarPorCpf('123.456.789-00');
+echo $paciente ? "Encontrado: " . $paciente['nome'] : "Não encontrado";
+echo "<br>";
 
-if ($sucesso) {
-    echo "Sucesso Absoluto: Paciente inserido com SQL blindado!";
-}
+// Teste 2: Buscar CPF que NÃO existe
+$fantasma = $repo->buscarPorCpf('000.000.000-00');
+echo $fantasma ? "Encontrado: " . $fantasma['nome'] : "Não encontrado";
